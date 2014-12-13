@@ -10,7 +10,7 @@ JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler 
 
 ## Why using this library?
 
-JSV helper functions are already available for Java, TCL, bash, perl etc. Go (unlike Java) is a compiled language which does not rely on a external runtime system (JVM) with strict typing; also Go is simple and lean. This makes it an ideal candidate for implementing JSV "scripts" in little Go programs. Performance measurement also showed that Go is the fastest option for JSV.
+JSV helper functions are already available for Java, TCL, bash, perl etc. Go is a compiled language which does not rely on a external runtime system (JVM). It enforces strict typing and is simple and lean. This makes it an ideal candidate for implementing JSV "scripts" in little Go programs. Performance measurements also showed that Go is the fastest available option for JSV. This is critical since a JSV script is usually executed for each submitted job.
 
 ## How to use it?
 
