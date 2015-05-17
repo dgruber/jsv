@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2013, 2014, Daniel Gruber (dgruber@univa.com), Univa
+Copyright (c) 2013, 2014, 2015 Daniel Gruber (dgruber@univa.com), Univa
 
 All rights reserved.
 
@@ -330,15 +330,14 @@ func JSV_sub_add_param(param, subParam, value string) {
 			newSubList := strings.Replace(v, subParam+"="+subValue, subParam+"="+value, 1)
 			JSV_set_param(param, newSubList)
 		}
-
+		return
 	} else if subParamList, isParam := JSV_get_param(param); isParam {
 		// Append the sub parameter to existing list.
 		JSV_set_param(param, subParamList+","+subParam+"="+value)
-	} else {
-		// Add parameter. It is the first sub-parameter.
-		JSV_set_param(param, subParam+"="+value)
+		return
 	}
-	jsv_send_command("PARAM " + param + " " + subParam + "=" + value)
+	// Add parameter. It is the first sub-parameter.
+	JSV_set_param(param, subParam+"="+value)
 }
 
 // adds a new environment variable to the job
