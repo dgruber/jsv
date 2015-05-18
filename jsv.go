@@ -66,7 +66,7 @@ var command_list map[string]string
 // cached job environment
 var environment_list map[string]string
 
-// create maps
+// init initializes global variables
 func init() {
 	command_list = make(map[string]string)
 	environment_list = make(map[string]string)
@@ -75,14 +75,15 @@ func init() {
 }
 
 /* local functions */
-// a START command was sent from the server
+
+// jsv_hande_start_command is executed when Grid Engine sends the START
+// command to the JSV script.
 func jsv_handle_start_command(checkEnvironment bool, jsvOnStartFunction func()) {
 	if state == initialized {
 		// execution of the function for getting the environment
 		if jsvOnStartFunction != nil {
 			jsvOnStartFunction()
 		}
-
 		jsv_send_command("STARTED")
 		state = started
 	} else {
@@ -90,15 +91,15 @@ func jsv_handle_start_command(checkEnvironment bool, jsvOnStartFunction func()) 
 	}
 }
 
+// jsv_handle begin_command is executed when BEGIN was sent from Grid Engine
+// to the JSV script.
 func jsv_handle_begin_command(verificationCommand func()) {
 	if state == started {
 		state = verifying
-
 		// run administrators verification function
 		if verificationCommand != nil {
 			verificationCommand()
 		}
-
 		// clear all params and environment variables we got for the next run
 		command_list = make(map[string]string)
 		environment_list = make(map[string]string)
@@ -107,7 +108,7 @@ func jsv_handle_begin_command(verificationCommand func()) {
 	}
 }
 
-// write both strings in the logfile if defined
+// jsv_script_log writes the given parameters to a logfile when defined.
 func jsv_script_log(param string, param2 string) {
 	if logging_enabled == true {
 		log.WriteString(param)
@@ -116,7 +117,7 @@ func jsv_script_log(param string, param2 string) {
 	}
 }
 
-// sends command to STDOUT
+// jsv_send_commannd sends the given parameter (command) to STDOUT.
 func jsv_send_command(param string) {
 	/* echo $@ */
 	out.WriteString(param + "\n")
@@ -124,6 +125,8 @@ func jsv_send_command(param string) {
 	jsv_script_log("<<< ", param)
 }
 
+// jsv_handle_env_command processes an enviornment variable sent from
+// Grid Engine and stores it in a global map.
 func jsv_handle_env_command(line string) {
 	if state == started {
 		tokens := strings.SplitN(line, " ", 4)
@@ -134,11 +137,12 @@ func jsv_handle_env_command(line string) {
 			}
 		}
 	} else {
-		jsv_send_command("ERROR JSV script got ENV command but is in state ...")
+		jsv_send_command("ERROR JSV script got ENV command but is not in state STARTED")
 	}
 }
 
-// put a parameter from Grid Engine to global list
+// jav_handle_param_command puts a job submission command from Grid Engine to
+// a global map.
 func jsv_handle_param_command(line string) {
 	if state == started {
 		tokens := strings.SplitN(line, " ", 3)
@@ -151,13 +155,13 @@ func jsv_handle_param_command(line string) {
 			jsv_send_command("ERROR PARAM without 1 argument..." + line)
 		}
 	} else {
-		jsv_send_command("ERROR JSV script got PARAM command but is in state ...")
+		jsv_send_command("ERROR JSV script got PARAM command but is not in STARTED state")
 	}
 }
 
 /* Global functions available for the JSV application. */
 
-// Logs the job submission parameters (for client side JSV on stdout).
+// JSV_show_params logs the job submission parameters (for client side JSV on stdout).
 func JSV_show_params() {
 	for param := range command_list {
 		name := "jsv_param_" + param
@@ -165,7 +169,7 @@ func JSV_show_params() {
 	}
 }
 
-// Logs the environment variables passed to the job (for client side JSV on stdout)
+// JSV_schow_envs logs the environment variables passed to the job (for client side JSV on stdout)
 func JSV_show_envs() {
 	for env := range environment_list {
 		name := "jsv_env_" + env
@@ -173,10 +177,10 @@ func JSV_show_envs() {
 	}
 }
 
-// The main JSV function. Must be called by the JSV 'script'.
+// Run is the main JSV function. Must be called by the JSV 'script'.
 // requires the verification function to be passed. Optional
 // a function which is run before the verification process can
-// be passed.
+// be passed or nil instead.
 func Run(checkEnvironment bool, verificationFunction func(), jsv_on_start_function func()) {
 	/* here the traditional main loop runs (jsv_main) */
 
@@ -306,7 +310,6 @@ func JSV_sub_del_param(param, subParam string) {
 				cleanedUpSubList = strings.Trim(cleanedUpSubList, ",")
 			}
 			JSV_set_param(param, cleanedUpSubList)
-
 		}
 	}
 }
@@ -340,27 +343,32 @@ func JSV_sub_add_param(param, subParam, value string) {
 	JSV_set_param(param, subParam+"="+value)
 }
 
-// adds a new environment variable to the job
+// JSV_is_env returns true in the case the given environment variable
+// was set for the job.
 func JSV_is_env(envVar string) bool {
 	_, exists := JSV_get_env(envVar)
 	return exists
 }
 
+// JSV_get_env returns the value of an environment variable.
 func JSV_get_env(envVar string) (string, bool) {
 	env, exists := environment_list[envVar]
 	return env, exists
 }
 
+// JSV_add_env adds an environment variable to a job.
 func JSV_add_env(envVar, value string) {
 	environment_list[envVar] = value
 	jsv_send_command("ENV ADD " + envVar + " " + value)
 }
 
+// JSV_mod_env modifies an environment variable of a job.
 func JSV_mod_env(envVar, value string) {
 	environment_list[envVar] = value
 	jsv_send_command("ENV MOD " + envVar + " " + value)
 }
 
+// JSV_del_env removes an environment variable from a job.
 func JSV_del_env(envVar string) {
 	if _, exists := environment_list[envVar]; exists {
 		delete(environment_list, envVar)
@@ -370,6 +378,8 @@ func JSV_del_env(envVar string) {
 
 // Additional helpers: Not specified in JSV protocol
 // -------------------------------------------------
+
+// JSV_list_env prints all environment variables on stdout.
 func JSV_list_env() {
 	for key, value := range environment_list {
 		fmt.Println("EV name:", key, "Value:", value)
@@ -378,7 +388,7 @@ func JSV_list_env() {
 
 // TODO parameter fo sublists
 
-// Must be called in the JSV function when the job was modified
+// JSV_correct must be called in the JSV function when the job was modified
 // and corrected. Currently it the same like jsv_accept().
 func JSV_correct(args string) {
 	if state == verifying {
@@ -389,7 +399,7 @@ func JSV_correct(args string) {
 	}
 }
 
-// Must be called in the JSV function when the job is accepted.
+// JSV_accept must be called in the JSV function when the job is accepted.
 // Alternativly jsv_correct() can be called when a job was modified.
 // Currently both have the same sematic.
 func JSV_accept(args string) {
@@ -401,7 +411,7 @@ func JSV_accept(args string) {
 	}
 }
 
-// Must be called when a job is going to be rejected.
+// JSV_reject rejects a job.
 func JSV_reject(args string) {
 	if state == verifying {
 		jsv_send_command("RESULT STATE REJECT " + args)
@@ -411,6 +421,7 @@ func JSV_reject(args string) {
 	}
 }
 
+// JSV_reject_wait rejects a job due to a temporary reason.
 // Must be called when is job is going to be rejected because
 // of a temporary reason. The only difference to jsv_reject() is
 // that a different message is logged by Grid Engine.
@@ -423,20 +434,23 @@ func JSV_reject_wait(args string) {
 	}
 }
 
-/* To be used in in the jsv_on_start() function. Let the master
-   sent the environment variables */
+// JSV_send_env can be called in the jsv_on_start function in order
+// to let Grid Engine send all environment variables to the JSV script.
 func JSV_send_env() {
 	jsv_send_command("SEND ENV")
 }
 
+// JSV_log_info logs the string povided as argmument as info message.
 func JSV_log_info(message string) {
 	jsv_send_command("LOG INFO " + message)
 }
 
+// JSV_log_warning logs the string provided as argument as warning.
 func JSV_log_warning(message string) {
 	jsv_send_command("LOG WARNING " + message)
 }
 
+// JSV_log_error logs the string provided as argument as error.
 func JSV_log_error(message string) {
 	jsv_send_command("LOG ERROR " + message)
 }
