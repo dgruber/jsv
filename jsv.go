@@ -55,8 +55,8 @@ var log *bufio.Writer
 var logging_enabled = false
 var logfile = "/tmp/jsv_logfile.log"
 
-var jsv_cli_params = "a ar A b ckpt cwd C display dl e hard h hold_jid hold_jid_ad i inherit j js m M masterq notify now N noshell nostdin o ot P p pty R r shell sync S t tc terse u w wd"
-var jsv_mod_params = "ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name binding_strategy binding_type binding_amount binding_socket binding_core binding_step binding_exp_n"
+var jsv_cli_params = "a ar A b ckpt cwd C display dl e hard h hold_jid hold_jid_ad i inherit j jc js m M masterq notify now N noshell nostdin o ot P p pty R r shell sync S t tc terse u w wd"
+var jsv_mod_params = "ac l_hard l_soft masterl q_hard q_soft pe_min pe_max pe_name binding_strategy binding_type binding_amount binding_socket binding_core binding_step binding_exp_n"
 var jsv_add_params = "CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
 var jsv_all_params = jsv_cli_params + " " + jsv_mod_params + " " + jsv_add_params
 
@@ -74,8 +74,6 @@ func init() {
 	out = bufio.NewWriter(os.Stdout)
 }
 
-/* local functions */
-
 // jsv_hande_start_command is executed when Grid Engine sends the START
 // command to the JSV script.
 func jsv_handle_start_command(checkEnvironment bool, jsvOnStartFunction func()) {
@@ -91,7 +89,7 @@ func jsv_handle_start_command(checkEnvironment bool, jsvOnStartFunction func()) 
 	}
 }
 
-// jsv_handle begin_command is executed when BEGIN was sent from Grid Engine
+// jsv_handle_begin_command is executed when BEGIN was sent from Grid Engine
 // to the JSV script.
 func jsv_handle_begin_command(verificationCommand func()) {
 	if state == started {
@@ -141,25 +139,70 @@ func jsv_handle_env_command(line string) {
 	}
 }
 
-// jav_handle_param_command puts a job submission command from Grid Engine to
-// a global map.
+// filterJobClassSpec filters out substrings like "{~}" - which anyhow
+// should not be send over the protocol.
+func filterJobClassSpec(unfiltered string) string {
+	if strings.Contains(unfiltered, "{") && strings.Contains(unfiltered, "}") {
+		first := strings.Index(unfiltered, "{")
+		last := strings.LastIndex(unfiltered, "}")
+		var filteredCmd string
+		for i, c := range unfiltered {
+			if i < first || i > last {
+				filteredCmd += string(c)
+			}
+		}
+		return filteredCmd
+	}
+	return unfiltered
+}
+
+// jsv_handle_param_command puts a job submission command from Grid Engine to
+// a global map. (input is like PARAM <cmd> <value>)
 func jsv_handle_param_command(line string) {
 	if state == started {
 		tokens := strings.SplitN(line, " ", 3)
 		if len(tokens) == 3 {
-			command_list[tokens[1]] = tokens[2]
+			// a hack for fixing a bug which comes from external
+			if tokens[1] == "l_hard" || tokens[1] == "l_soft" {
+				// filter possible {} (which should not be sent, but could be
+				// in case of job classes)
+				values := strings.Split(tokens[2], ",")
+				newString := ""
+				stringChanged := false
+				for i, value := range values {
+					if i > 0 {
+						newString = newString + ","
+					}
+					// here we have h_rt=123 m_mem_free=1G
+					request := strings.Split(value, "=")
+					if len(request) == 2 {
+						filtered := filterJobClassSpec(request[0])
+						if filtered != request[0] {
+							// bug found -> remove job class specifier
+							stringChanged = true
+							newString = newString + filtered + "=" + request[1]
+							continue
+						}
+					}
+					newString = newString + value
+				}
+				if stringChanged {
+					command_list[tokens[1]] = newString
+				} else {
+					command_list[tokens[1]] = tokens[2]
+				}
+			} else {
+				command_list[tokens[1]] = tokens[2]
+			}
 		} else if len(tokens) == 2 {
-			// like M
-
+			command_list[tokens[1]] = ""
 		} else {
-			jsv_send_command("ERROR PARAM without 1 argument..." + line)
+			jsv_send_command("ERROR PARAM without any argument: " + line)
 		}
 	} else {
 		jsv_send_command("ERROR JSV script got PARAM command but is not in STARTED state")
 	}
 }
-
-/* Global functions available for the JSV application. */
 
 // JSV_show_params logs the job submission parameters (for client side JSV on stdout).
 func JSV_show_params() {
@@ -169,7 +212,7 @@ func JSV_show_params() {
 	}
 }
 
-// JSV_schow_envs logs the environment variables passed to the job (for client side JSV on stdout)
+// JSV_show_envs logs the environment variables passed to the job (for client side JSV on stdout)
 func JSV_show_envs() {
 	for env := range environment_list {
 		name := "jsv_env_" + env
@@ -249,12 +292,14 @@ func Run(checkEnvironment bool, verificationFunction func(), jsv_on_start_functi
 	}
 }
 
+// JSV_is_param checks if the given parameter is requested by the job.
 func JSV_is_param(param string) bool {
 	_, exists := JSV_get_param(param)
 	return exists
 }
 
-// gets the jsv parameter
+// JSV_get_param returns the value of the parameter which was requested by the job.
+// Example: JSV_get_param("SCRIPT")
 func JSV_get_param(suffix string) (string, bool) {
 	command, exists := command_list[suffix]
 	return command, exists
@@ -376,6 +421,14 @@ func JSV_del_env(envVar string) {
 	}
 }
 
+// JSV_set_timeout overrides the timeout for server side
+// JSVs specified in the SGE_JSV_TIMEOUT environment variable.
+// The timeout is specified in seconds and must be greater
+// than one. The command might only with Univa Grid Engine.
+func JSV_set_timeout(timeout int) {
+	jsv_send_command(fmt.Sprintf("SEND TIMEOUT %d", timeout))
+}
+
 // Additional helpers: Not specified in JSV protocol
 // -------------------------------------------------
 
@@ -386,7 +439,7 @@ func JSV_list_env() {
 	}
 }
 
-// TODO parameter fo sublists
+// TODO parameter for sublists
 
 // JSV_correct must be called in the JSV function when the job was modified
 // and corrected. Currently it the same like jsv_accept().
