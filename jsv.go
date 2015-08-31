@@ -55,10 +55,11 @@ var log *bufio.Writer
 var logging_enabled = false
 var logfile = "/tmp/jsv_logfile.log"
 
-var jsv_cli_params = "a ar A b ckpt cwd C display dl e hard h hold_jid hold_jid_ad i inherit j jc js m M masterq notify now N noshell nostdin o ot P p pty R r shell sync S t tc terse u w wd"
-var jsv_mod_params = "ac l_hard l_soft masterl q_hard q_soft pe_min pe_max pe_name binding_strategy binding_type binding_amount binding_socket binding_core binding_step binding_exp_n"
-var jsv_add_params = "CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
-var jsv_all_params = jsv_cli_params + " " + jsv_mod_params + " " + jsv_add_params
+// Available parameters:
+// var jsv_cli_params = "a ar A b ckpt cwd C display dl e hard h hold_jid hold_jid_ad i inherit j jc js m M masterq notify now N noshell nostdin o ot P p pty R r shell sync S t tc terse u w wd"
+// var jsv_mod_params = "ac l_hard l_soft masterl q_hard q_soft pe_min pe_max pe_name binding_strategy binding_type binding_amount binding_socket binding_core binding_step binding_exp_n"
+// var jsv_add_params = "CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
+// var jsv_all_params = jsv_cli_params + " " + jsv_mod_params + " " + jsv_add_params
 
 // cached commands
 var command_list map[string]string
@@ -298,20 +299,21 @@ func JSV_is_param(param string) bool {
 	return exists
 }
 
-// JSV_get_param returns the value of the parameter which was requested by the job.
+// JSV_get_param returns the value of a simple job submission parameter
+// which was requested by the job.
 // Example: JSV_get_param("SCRIPT")
 func JSV_get_param(suffix string) (string, bool) {
 	command, exists := command_list[suffix]
 	return command, exists
 }
 
-// sets a job submission parameter
+// JSV_set_param adds a simple job submission parameter.
 func JSV_set_param(suffix string, value string) {
 	command_list[suffix] = value
 	jsv_send_command("PARAM " + suffix + " " + value)
 }
 
-// delete a job submission parameter
+// JSV_del_param deletes a simple job submission parameter.
 func JSV_del_param(suffix string) {
 	// delete parameter only if it exists (got from master or sent)
 	if _, exists := command_list[suffix]; exists {
@@ -319,7 +321,8 @@ func JSV_del_param(suffix string) {
 	}
 }
 
-// Returns true in case a specific sub parameter is set.
+// JSV_sub_is_param returns true in case a specific sub
+// parameter is set.
 // Example: qsub -l h_vmem=1G ...
 // jsv_sub_is_param("l", "h_vmem") == true
 func JSV_sub_is_param(param, subParam string) bool {
@@ -327,7 +330,7 @@ func JSV_sub_is_param(param, subParam string) bool {
 	return exists
 }
 
-// Returns the value of a sub-parameter.
+// JSV_sub_get_param returns the value of a sub-parameter.
 // Example: qsub -l h_vmem=1G ...
 // JSV_sub_get_param("l", "h_vmem") == "1G"
 func JSV_sub_get_param(param, subParam string) (string, bool) {
@@ -342,6 +345,8 @@ func JSV_sub_get_param(param, subParam string) (string, bool) {
 	return "", false
 }
 
+// JSV_sub_del_param deletes a sublist element from a list (like
+// removing h_vmem from l_hard request list).
 func JSV_sub_del_param(param, subParam string) {
 	// only remove when the sub parameter is defined
 	if subValue, exists := JSV_sub_get_param(param, subParam); exists {
@@ -359,9 +364,9 @@ func JSV_sub_del_param(param, subParam string) {
 	}
 }
 
-// Adds a new job submission paramter to the job. The expected
-// parameter is a sub parameter of a parameter group, like a
-// resource request (qsub -l h_vmem=1G ...). In this case the
+// JSV_sub_add_param adds a new sublist parameter to a list.
+// The expected parameter is a sub parameter of a parameter group,
+// like a resource request (qsub -l h_vmem=1G ...). In this case the
 // function would be called like:
 // JSV_sub_add_param("l", "h_vmem", "1G")
 func JSV_sub_add_param(param, subParam, value string) {
