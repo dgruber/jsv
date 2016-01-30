@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2013, 2014, Daniel Gruber (dgruber@univa.com), Univa
+Copyright (c) 2013, 2014, 2016 Daniel Gruber (dgruber@univa.com), Univa
 
 All rights reserved.
 
@@ -31,17 +31,17 @@ import (
 	"github.com/dgruber/jsv"
 )
 
-func jsv_on_start_function() {
+func jsvOnStartFunction() {
 	//jsv_send_env()
 }
 
-func job_verification_function() {
+func jsvVerificationFunction() {
 	// setting -binding linear:1 to each job (so that each
 	// job can only use one core on the compute node)
-	jsv.JSV_set_param("binding_strategy", "linear_automatic")
-	jsv.JSV_set_param("binding_type", "set")
-	jsv.JSV_set_param("binding_amount", "1")
-	jsv.JSV_set_param("binding_exp_n", "0")
+	jsv.SetParam("binding_strategy", "linear_automatic")
+	jsv.SetParam("binding_type", "set")
+	jsv.SetParam("binding_amount", "1")
+	jsv.SetParam("binding_exp_n", "0")
 
 	// Can be used for displaying submission parameters and
 	// submission environment variables.
@@ -52,17 +52,17 @@ func job_verification_function() {
 	// in qmaster messages file. For client side JSV
 	// scripts to print out some messages when doing
 	// qsub.
-	//jsv.JSV_log_info("info message")
-	//jsv.JSV_log_warning("warning message")
-	//jsv.JSV_log_error("error message")
+	//jsv.LogInfo("info message")
+	//jsv.LogWarning("warning message")
+	//jsv.LogError("error message")
 
 	// accepting the job but indicating that we did
 	// some changes
-	jsv.JSV_correct("Job was modified")
+	jsv.Correct("Job was modified")
 	return
 }
 
 /* example JSV 'script' */
 func main() {
-	jsv.Run(true, job_verification_function, jsv_on_start_function)
+	jsv.Run(true, jsvOnStartFunction, jsvVerificationFunction)
 }
