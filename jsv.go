@@ -132,7 +132,7 @@ func sendCommand(param string) {
 	scriptLog("<<< ", param)
 }
 
-// handleEnvCommand processes an enviornment variable sent from
+// handleEnvCommand processes an environment variable sent from
 // Grid Engine and stores it in a global map.
 func handleEnvCommand(line string) {
 	if state == started {
