@@ -6,7 +6,9 @@ Grid Engine JSV (Job Submission Verifier) implementation for Go (#golang).
 
 ## What is it?
 
-JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binariers can be executed after a job was submitted to the cluster and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerfull tool for an administrator to inspect, correct, and set job submission parameters for jobs based on his own logic. One example would be only allowing jobs with a certain sizes (number of cores / slots requested) at a certain time. Another one would be adding an certain accounting string for each job.
+JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binaries are be executed after a job was submitted to the cluster and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerful tool for an administrator to inspect, correct, and set job submission parameters for jobs based on his own logic. 
+
+An example would be only allowing jobs with a certain sizes (number of cores / slots requested) at a certain time. Another one would be adding a predefined dynamically created accounting string for each job.
 
 ## Why using this library?
 
@@ -14,7 +16,7 @@ JSV helper functions are already available for Java, TCL, bash, perl etc. Go is 
 
 ## How to use it?
 
-Once you have this library, please consult the exmaple in the examples directory. Please consult the JSV documentation of Grid Engine for a more detailed description.
+Once you have this library, please consult the example in the examples directory. Please consult the JSV documentation of Grid Engine for a more detailed description.
 
 ## Example
 
@@ -30,8 +32,13 @@ In order to use it as client side JSV add the binary on *qsub* command line.
     
 Check the *qsub* parameters in *qstat*. It added the new parameter.
 
-In order to use it as server side JSV you need to be Grid Engine admin user. Set the path
+An administrator certainly wants to enforce rules encoded in the JSV application for 
+*each* job, even when it not requests the *-jsv* parameter. Grid Engine allows to configure
+the location of a global JSV script executed for all jobs by the master process.
+This is calles *server sided JSV*.
+
+In order to use your application as server side JSV you need to be Grid Engine admin user. Set the path
 to the binary in _jsv_url_ in the global configuration *qconf -mconf global*. Then it is 
-executed for each job submitted.
+executed for each submitted job automatically.
 
     qsub -b y /bin/sleep 123
