@@ -58,9 +58,10 @@ var log *bufio.Writer
 // This can be used as a check in the JSV application. Don't change
 // the setting during the runtime of a JSV application.
 var LoggingEnabled = false
+
 // Logfile is the path to the logfile which should be used
 // for logging when LoggingEnabled is set to true.
-var Logfile  = "/tmp/jsv_logfile.log"
+var Logfile = "/tmp/jsv_logfile.log"
 
 // Available parameters:
 // var jsv_cli_params = "a ar A b ckpt cwd C display dl e hard h hold_jid hold_jid_ad i inherit j jc js m M masterq notify now N noshell nostdin o ot P p pty R r shell sync S t tc terse u w wd"
