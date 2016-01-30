@@ -1,6 +1,7 @@
 jsv
 ===
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/dgruber/jsv)
+[![Go Report Card](http://goreportcard.com/badge/dgruber/jsv)](http://goreportcard.com/report/dgruber/jsv)
 
 Grid Engine JSV (Job Submission Verifier) implementation for Go (#golang).
 
