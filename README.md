@@ -6,9 +6,9 @@ Grid Engine JSV (Job Submission Verifier) implementation for Go (#golang).
 
 ## What is it?
 
-JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binaries are be executed after a job was submitted to the cluster and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerful tool for an administrator to inspect, correct, and set job submission parameters for jobs based on his own logic. 
+JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binaries are be executed after a job was submitted to the cluster and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerful tool for an administrator to _inspect_, _correct_, and _set_ job submission parameters for jobs based on his own logic. 
 
-An example would be only allowing jobs with a certain sizes (number of cores / slots requested) at a certain time. Another one would be adding a predefined dynamically created accounting string for each job.
+An example of using JSVs would be restricting jobs of certain sizes (e.g. based on number of requested cores or slots) for being submitted at a certain peak times. Another example is be adding a predefined dynamically created accounting string for each job.
 
 Note that the code is not really Go style. Is was kept as close as possible to JSV implementations available in other programming languages. But I'm thinking to make it more Go-ish in the future. So please vendor the library in your project to avoid complications.
 
