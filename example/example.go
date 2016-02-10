@@ -38,6 +38,7 @@ func jsvOnStartFunction() {
 func jsvVerificationFunction() {
 	// setting -binding linear:1 to each job (so that each
 	// job can only use one core on the compute node)
+	jsv.LoggingEnabled = true
 	jsv.SetParam("binding_strategy", "linear_automatic")
 	jsv.SetParam("binding_type", "set")
 	jsv.SetParam("binding_amount", "1")
@@ -64,5 +65,5 @@ func jsvVerificationFunction() {
 
 /* example JSV 'script' */
 func main() {
-	jsv.Run(true, jsvOnStartFunction, jsvVerificationFunction)
+	jsv.Run(true, jsvVerificationFunction, jsvOnStartFunction)
 }

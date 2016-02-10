@@ -41,13 +41,13 @@ import (
 type State int
 
 const (
-	initialized = iota
+	initialized State = iota
 	started
 	verifying
 )
 
 // State within the JSV processing
-var state = initialized
+var state State = initialized
 
 var in *bufio.Reader
 var out *bufio.Writer
@@ -117,7 +117,7 @@ func handleBeginCommand(verificationCommand func()) {
 
 // scriptLog writes the given parameters to a logfile when defined.
 func scriptLog(param string, param2 string) {
-	if LoggingEnabled == true {
+	if LoggingEnabled == true && log != nil {
 		log.WriteString(param)
 		log.WriteString(param)
 		log.Flush()
@@ -248,9 +248,13 @@ func Run(checkEnvironment bool, verificationFunction func(), onStartFunction fun
 	if LoggingEnabled {
 		lf, err := os.Open(Logfile)
 		if err != nil {
-			// error logfile can't be opened - disable logging
-			LoggingEnabled = false
-		} else {
+			lf, err = os.Create(Logfile)
+			if err != nil {
+				// error logfile can't be opened - disable logging
+				LoggingEnabled = false
+			}
+		}
+		if LoggingEnabled {
 			log = bufio.NewWriter(lf)
 		}
 	}
