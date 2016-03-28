@@ -10,9 +10,11 @@ is available at the git tag *ge_style*.
 
 ## What is it?
 
-JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binaries are be executed after a job was submitted to the cluster and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerful tool for an administrator to inspect, correct, and set job submission parameters for jobs based on his own logic. 
+JSV or Job Submission Verifiers are a part of the Grid Engine cluster scheduler eco system. JSV scripts or binaries are executed after a job was submitted and before the job is accepted by the cluster scheduler / manager (the Grid Engine master process). They are a powerful tool for an administrator to inspect, correct, and set job submission parameters for jobs based on his own logic. 
 
-An example would be only allowing jobs with a certain sizes (number of cores / slots requested) at a certain time. Another one would be adding a predefined dynamically created accounting string for each job.
+An example would be only allowing jobs with a certain sizes (number of cores / slots requested) at a certain time. Another one would be adding a predefined dynamically created accounting string for each job. JSV scripts can also be used for gathering job submission statistics or draining the cluster by rejecting all jobs before a cluster upgrade happens.
+
+For more information please consult your Univa Grid Engine documentation and the man pages ([JSV man page](http://gridengine.eu/mangridengine/htmlman1/jsv.html) and [qsub man page](http://gridengine.eu/mangridengine/htmlman1/qsub.html)).
 
 ## Why using this library?
 
