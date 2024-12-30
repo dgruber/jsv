@@ -1,6 +1,8 @@
 /*
 Copyright (c) 2013, 2014, 2015 Daniel Gruber (dgruber@univa.com), Univa
 
+Copyright (c) 2024, Daniel Gruber, HPC Gridware GmbH
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -213,16 +215,16 @@ func handleParamCommand(line string) {
 	}
 }
 
-// showParams logs the job submission parameters (for client side JSV on stdout).
-func showParams() {
+// SshowParams logs the job submission parameters (for client side JSV on stdout).
+func ShowParams() {
 	for param := range commandList {
 		name := "jsv_param_" + param
 		sendCommand("LOG INFO got param " + name + "=" + commandList[param])
 	}
 }
 
-// showEnvs logs the environment variables passed to the job (for client side JSV on stdout)
-func showEnvs() {
+// ShowEnvs logs the environment variables passed to the job (for client side JSV on stdout)
+func ShowEnvs() {
 	for env := range environmentList {
 		name := "jsv_env_" + env
 		sendCommand("LOG INFO got env " + name + "=" + environmentList[env])
@@ -259,10 +261,10 @@ func Run(checkEnvironment bool, verificationFunction func(), onStartFunction fun
 		}
 	}
 
-	for hasInput && abort == false {
+	for hasInput && !abort {
 		/* get input from stdin */
 		line, isPrefix, err := in.ReadLine()
-		if err == nil && isPrefix == false {
+		if err == nil && !isPrefix {
 			//out.Write(line)
 			//out.Flush()
 
@@ -301,8 +303,8 @@ func Run(checkEnvironment bool, verificationFunction func(), onStartFunction fun
 			}
 
 			if strings.HasPrefix(string(line), "SHOW") {
-				showEnvs()
-				showParams()
+				ShowEnvs()
+				ShowParams()
 				continue
 			}
 
@@ -347,7 +349,7 @@ func DelParam(suffix string) {
 // SubIsParam returns true in case a specific sub
 // parameter is set.
 // Example: qsub -l h_vmem=1G ...
-// jsv_sub_is_param("l", "h_vmem") == true
+// jsv_sub_is_param("l_hard", "h_vmem") == true
 func SubIsParam(param, subParam string) bool {
 	_, exists := SubGetParam(param, subParam)
 	return exists
@@ -361,7 +363,10 @@ func SubGetParam(param, subParam string) (string, bool) {
 		for _, pair := range strings.Split(value, ",") {
 			sub := strings.Split(pair, "=")
 			if sub[0] == subParam {
-				return sub[1], true
+				if len(sub) >= 2 {
+					return sub[1], true
+				}
+				return "", true
 			}
 		}
 	}
