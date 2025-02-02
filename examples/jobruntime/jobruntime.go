@@ -21,7 +21,7 @@ func jsvVerificationFunction() {
 	}
 
 	// check if the runtime limit is at least 10 minutes
-	runtimeLimit, exists := jsv.SubGetParam("l", "h_rt")
+	runtimeLimit, exists := jsv.SubGetParam("l_hard", "h_rt")
 	if !exists {
 		jsv.Reject("No hard runtime limit requested (h_rt)")
 		return
