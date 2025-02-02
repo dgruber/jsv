@@ -1,0 +1,20 @@
+{
+  "context": "client",
+  "client": "qsub",
+  "user": "testuser",
+  "group": "testgroup",
+  "cmd_name": "/path/to/script.sh",
+  "cmd_args": 1,
+  "params": {
+    "l_hard": "h_rt=99",
+    "pe_name": "mpi",
+    "pe_min": "3",
+    "pe_max": "3",
+    "q_hard": "long.q"
+  },
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "LONG_ENV_VAR": "123",
+    "USER": "testuser"
+  }
+}
